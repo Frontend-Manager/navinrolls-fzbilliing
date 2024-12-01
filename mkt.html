@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MKT Page</title>
+    
+    <!-- Bootstrap 5 CSS CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            margin-top: 50px;
+        }
+
+        #banner-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            padding: 20px;
+        }
+
+        /* Banner Card Design */
+        .banner-wrapper {
+            position: relative;
+            overflow: hidden;
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+            background-color: #fff;
+        }
+
+        .banner-wrapper:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .banner {
+            width: 100%;
+            height: 200px;
+            background-color: #ccc;
+            position: relative;
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        .banner img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .banner-wrapper:hover .banner img {
+            transform: scale(1.1);
+        }
+
+        .banner-title {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+            border-top: 3px solid #007bff;
+            border-radius: 0 0 15px 15px;
+        }
+
+        .no-banners {
+            font-size: 18px;
+            color: #6c757d;
+            text-align: center;
+            width: 100%;
+            padding: 20px;
+            background-color: #f1f1f1;
+            border-radius: 8px;
+        }
+
+        /* Modal Styles */
+        .modal-body {
+            text-align: center;
+        }
+
+        .modal-body img {
+            width: 100%;
+            height: auto;
+            max-height: 500px;
+            border-radius: 12px;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        /* Modal Background Animation */
+        .modal.fade .modal-dialog {
+            transform: translate(0, -50%);
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .modal.show .modal-dialog {
+            transform: translate(0, 0);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <button class="btn btn-primary add-dish-btn" onclick="window.location.href="DigiCard.html'">Back</button>
+        <h1 class="text-center mb-4">Upcoming Offer</h1> 
+        <div id="banner-container" class="d-flex flex-wrap justify-content-center mt-4"></div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+        import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+
+        const firebaseConfig = {
+    apiKey: "AIzaSyCUduOP2eu1hhjNm9M7EKeBFPdy0CNHqwU",
+    authDomain: "navinrolls-fzbilling.firebaseapp.com",
+    databaseURL: "https://navinrolls-fzbilling-default-rtdb.firebaseio.com",
+    projectId: "navinrolls-fzbilling",
+    storageBucket: "navinrolls-fzbilling.firebasestorage.app",
+    messagingSenderId: "133912915246",
+    appId: "1:133912915246:web:12c27f3b8c33a8ced95ebf",
+    measurementId: "G-S8M650XRYR"
+  };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+
+        // Fetch Banners from Firebase
+        function loadBanners() {
+            const bannersRef = ref(database, 'banners');
+            get(bannersRef).then(snapshot => {
+                const banners = snapshot.val();
+                const bannerContainer = document.getElementById('banner-container');
+                bannerContainer.innerHTML = ''; // Clear existing banners
+
+                if (banners) {
+                    Object.keys(banners).forEach(key => {
+                        const banner = banners[key];
+                        const bannerWrapper = document.createElement('div');
+                        bannerWrapper.classList.add('banner-wrapper');
+                        bannerWrapper.setAttribute('data-bs-toggle', 'modal');
+                        bannerWrapper.setAttribute('data-bs-target', '#bannerModal');
+                        bannerWrapper.setAttribute('data-title', banner.text);
+                        bannerWrapper.setAttribute('data-image', banner.imageUrl);
+
+                        // Banner element with background image
+                        const bannerElement = document.createElement('div');
+                        bannerElement.classList.add('banner');
+                        const bannerImage = document.createElement('img');
+                        bannerImage.src = banner.imageUrl;
+                        bannerElement.appendChild(bannerImage);
+
+                        // Banner Title
+                        const bannerTitle = document.createElement('div');
+                        bannerTitle.classList.add('banner-title');
+                        bannerTitle.innerText = banner.text;
+
+                        // Append elements
+                        bannerWrapper.appendChild(bannerElement);
+                        bannerWrapper.appendChild(bannerTitle);
+                        bannerContainer.appendChild(bannerWrapper);
+                    });
+                } else {
+                    // No banners available
+                    const noBanners = document.createElement('div');
+                    noBanners.classList.add('no-banners');
+                    noBanners.innerText = 'No banners available.';
+                    bannerContainer.appendChild(noBanners);
+                }
+            }).catch(error => {
+                console.error("Error fetching banners:", error);
+            });
+        }
+
+        // Load banners on page load
+        loadBanners();
+
+        // Set modal content when banner is clicked
+        const modal = document.getElementById('bannerModal');
+        modal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget; // Button that triggered the modal
+            const title = button.getAttribute('data-title'); // Extract info from data-* attributes
+            const imageUrl = button.getAttribute('data-image');
+
+            // Update the modal's content
+            const modalTitle = modal.querySelector('.modal-title');
+            const modalBody = modal.querySelector('.modal-body');
+            modalTitle.textContent = title;
+            modalBody.innerHTML = `<img src="${imageUrl}" class="img-fluid" alt="${title}">`;
+        });
+    </script>
+
+    <!-- Modal -->
+    <div class="modal fade" id="bannerModal" tabindex="-1" aria-labelledby="bannerModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="bannerModalLabel">Banner Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Banner image and title will be inserted here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS and Popper.js -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js"></script>
+</body>
+</html>
